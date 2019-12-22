@@ -4,6 +4,7 @@
 }
 #include <iostream>
 #include <cstdlib>
+#include <string>
 using namespace std;
 
 // (1) exe l input                                list the last key frame
@@ -38,9 +39,12 @@ int main(int args, char** argv) {
 						}
 						frameCount++;
 					}
+					av_packet_unref(&packet);
 				}
-				else
+				else {
+					av_packet_unref(&packet);
 					break;
+				}
 			}
 			std::cout << "\nThe last keyframe is: " << keyframe << '\n';
 			avformat_close_input(&inFmtCtx);
@@ -81,14 +85,18 @@ int main(int args, char** argv) {
 						ret = av_interleaved_write_frame(outFmtCtx, &packet);
 						frameCount++;
 					}
+					else
+						av_packet_unref(&packet);
 				}
 				else {
 					if ((packet.flags & AV_PKT_FLAG_KEY) == 0) {
+						av_packet_unref(&packet);
 						std::cout << "The frame at the selected index isn't a keyframe.\n";
 						exit(-1);
 					}
 					else {
 						pts = packet.pts;
+						av_packet_unref(&packet);
 						break;
 					}
 				}
@@ -113,9 +121,13 @@ int main(int args, char** argv) {
 						packet.dts += pts;
 						ret = av_interleaved_write_frame(outFmtCtx, &packet);
 					}
+					else
+						av_packet_unref(&packet);
 				}
-				else
+				else {
+					av_packet_unref(&packet);
 					break;
+				}
 			}
 
 			av_write_trailer(outFmtCtx);
